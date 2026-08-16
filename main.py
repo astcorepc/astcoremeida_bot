@@ -22,7 +22,7 @@ dp.middleware.setup(LoggingMiddleware())
 class Form(StatesGroup):
     choosing_category = State()
     filling_fields = State()
-    waiting_for_photos = State()  # ← ИЗМЕНЕНО: ожидание фото
+    waiting_for_photos = State()
 
 
 # --- Хранилище временных данных ---
@@ -37,7 +37,7 @@ cancel_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-# --- КНОПКА "ГОТОВО" (после загрузки фото) ---
+# --- КНОПКА "ГОТОВО" ---
 done_keyboard = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton("✅ ГОТОВО (опубликовать)")],
@@ -135,6 +135,9 @@ async def done_photos_handler(message: types.Message, state: FSMContext):
     if "avito_link" not in filled_fields or not filled_fields["avito_link"]:
         filled_fields["avito_link"] = "#"
     
+    # ← ЭТА СТРОКА ДОБАВЛЯЕТ ТЕГИ!
+    filled_fields["tags"] = category.get("tags", "")
+    
     try:
         final_text = category["template"].format(**filled_fields)
     except KeyError as e:
@@ -142,10 +145,9 @@ async def done_photos_handler(message: types.Message, state: FSMContext):
         await state.finish()
         return
     
-    # Отправляем в канал (медиа-группа до 10 фото)
+    # Отправляем в канал
     try:
         if len(photos) == 1:
-            # Если одно фото — отправляем как обычное
             await bot.send_photo(
                 chat_id=config.CHANNEL_ID,
                 photo=photos[0],
@@ -153,15 +155,12 @@ async def done_photos_handler(message: types.Message, state: FSMContext):
                 parse_mode="HTML"
             )
         else:
-            # Если несколько фото — отправляем как альбом (медиа-группа)
             from aiogram.types import InputMediaPhoto
             media_group = []
             for i, photo_id in enumerate(photos):
                 if i == 0:
-                    # Первое фото с подписью
                     media_group.append(InputMediaPhoto(media=photo_id, caption=final_text, parse_mode="HTML"))
                 else:
-                    # Остальные фото без подписи
                     media_group.append(InputMediaPhoto(media=photo_id))
             
             await bot.send_media_group(
@@ -200,7 +199,7 @@ async def process_category(callback_query: types.CallbackQuery, state: FSMContex
         "category": category_key,
         "fields": {},
         "field_index": 0,
-        "photos": []  # ← Хранилище для фото
+        "photos": []
     }
 
     fields = category["fields"]
@@ -250,7 +249,6 @@ async def process_field_answer(message: types.Message, state: FSMContext):
             reply_markup=cancel_keyboard
         )
     else:
-        # Все вопросы заданы → переходим к загрузке фото
         await message.answer(
             "✅ Отлично! Все характеристики заполнены.\n\n"
             "📸 Теперь отправь ФОТО товара.\n"
@@ -258,12 +256,12 @@ async def process_field_answer(message: types.Message, state: FSMContext):
             "• Отправляй по одному фото\n"
             "• Когда загрузишь все фото — нажми 'ГОТОВО'\n\n"
             "📎 Нажми на скрепку и выбери фото:",
-            reply_markup=done_keyboard  # ← КНОПКИ "ГОТОВО" и "ОТМЕНА"
+            reply_markup=done_keyboard
         )
         await Form.waiting_for_photos.set()
 
 
-# --- Обработка фото (сбор до 4 штук) ---
+# --- Обработка фото ---
 @dp.message_handler(content_types=['photo'], state=Form.waiting_for_photos)
 async def process_photo(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
@@ -274,11 +272,9 @@ async def process_photo(message: types.Message, state: FSMContext):
         await state.finish()
         return
     
-    # Получаем фото
     photo = message.photo[-1]
     file_id = photo.file_id
     
-    # Добавляем в список
     if "photos" not in data:
         data["photos"] = []
     
@@ -305,11 +301,10 @@ async def process_photo(message: types.Message, state: FSMContext):
 # --- Обработчик, если отправили не фото ---
 @dp.message_handler(state=Form.waiting_for_photos, content_types=['text', 'document', 'video', 'audio', 'sticker', 'animation'])
 async def wrong_photo_input(message: types.Message):
-    # Проверяем, не нажата ли кнопка "ГОТОВО" или "ОТМЕНА"
     if message.text == "✅ ГОТОВО (опубликовать)":
-        return  # Это обрабатывается отдельным хендлером
+        return
     if message.text == "❌ ОТМЕНА":
-        return  # Это обрабатывается отдельным хендлером
+        return
     
     await message.answer(
         "⚠️ Пожалуйста, отправь именно ФОТО (картинку).\n\n"
