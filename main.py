@@ -1,201 +1,80 @@
-CATEGORIES = {
-    "cpu": {
-        "name": "🖥 Процессор",
-        "template": """ПРОЦЕССОР
+import logging
+from aiogram import Bot, Dispatcher, types
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+import os
 
-Характеристики:
-- Модель: {model}
-- Сокет: {socket}
-- Частота: {frequency}
+# ===== НАСТРОЙКИ =====
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+if not BOT_TOKEN:
+    raise ValueError("❌ BOT_TOKEN не найден!")
 
-✅ Полностью исправен, всё работает
-💰 Выгодная цена - {price} ₽
-🛡 Гарантия - 7 дней
+logging.basicConfig(level=logging.INFO)
 
-Отправка любым удобным способом:
-Авито Доставка - Почта России - Яндекс Доставка - СДЭК
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher(bot, storage=MemoryStorage())
 
-📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
-        "fields": [
-            {"key": "model", "question": "Введите МОДЕЛЬ процессора"},
-            {"key": "socket", "question": "Введите СОКЕТ (например, LGA 1700)"},
-            {"key": "frequency", "question": "Введите ЧАСТОТУ (например, 3.6 ГГц)"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях (только число)"}
-        ]
-    },
-    "gpu": {
-        "name": "🎮 Видеокарта",
-        "template": """ВИДЕОКАРТА
+# ===== КНОПКА СТАРТ =====
+start_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton("🚀 ЗАПУСТИТЬ БОТА")]
+    ],
+    resize_keyboard=True
+)
 
-Характеристики:
-- Модель: {model}
-- Видеопамять: {memory} ГБ
-- Производитель: {brand}
+# ===== КОМАНДА /start =====
+@dp.message_handler(commands=['start'])
+async def start_command(message: types.Message):
+    await message.answer(
+        "👋 Привет! Я бот для создания объявлений!\n\n"
+        "Нажми кнопку ниже, чтобы начать:",
+        reply_markup=start_keyboard
+    )
+    print(f"✅ Пользователь {message.from_user.id} нажал /start")
 
-✅ Полностью исправна, всё работает
-💰 Выгодная цена - {price} ₽
-🛡 Гарантия - 7 дней
+# ===== КНОПКА "ЗАПУСТИТЬ БОТА" =====
+@dp.message_handler(lambda message: message.text == "🚀 ЗАПУСТИТЬ БОТА")
+async def start_bot_button(message: types.Message):
+    await message.answer(
+        "✅ Бот работает!\n\n"
+        "Выбери категорию товара:",
+        reply_markup=InlineKeyboardMarkup(row_width=2)
+        .add(
+            InlineKeyboardButton("🖥 Процессор", callback_data="cpu"),
+            InlineKeyboardButton("🎮 Видеокарта", callback_data="gpu"),
+            InlineKeyboardButton("🖥 Корпус", callback_data="case"),
+            InlineKeyboardButton("💽 HDD", callback_data="hdd"),
+            InlineKeyboardButton("⚡ SSD", callback_data="ssd"),
+            InlineKeyboardButton("🧠 Оперативная память", callback_data="ram"),
+            InlineKeyboardButton("🔌 Материнская плата", callback_data="motherboard"),
+            InlineKeyboardButton("🔋 Блок питания", callback_data="psu")
+        )
+    )
+    print(f"✅ Пользователь {message.from_user.id} нажал кнопку запуска")
 
-Отправка любым удобным способом:
-Авито Доставка - Почта России - Яндекс Доставка - СДЭК
+# ===== ОБРАБОТКА КНОПОК КАТЕГОРИЙ =====
+@dp.callback_query_handler(lambda c: True)
+async def process_callback(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    await bot.send_message(
+        callback_query.from_user.id,
+        f"✅ Выбрана категория: {callback_query.data}\n\n"
+        f"📝 Сейчас я задам тебе несколько вопросов.\n"
+        f"Просто пиши ответы в чат."
+    )
+    print(f"✅ Пользователь выбрал категорию: {callback_query.data}")
 
-📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
-        "fields": [
-            {"key": "model", "question": "Введите МОДЕЛЬ видеокарты"},
-            {"key": "memory", "question": "Введите объём видеопамяти в ГБ (число)"},
-            {"key": "brand", "question": "Введите ПРОИЗВОДИТЕЛЯ (NVIDIA, AMD)"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
-        ]
-    },
-    "case": {
-        "name": "🖥 Корпус",
-        "template": """КОРПУС | {model}
+# ===== ЭХО (для теста) =====
+@dp.message_handler()
+async def echo(message: types.Message):
+    await message.answer(f"📩 Ты написал: {message.text}\n\nНажми /start чтобы начать заново.")
+    print(f"📩 Сообщение от {message.from_user.id}: {message.text}")
 
-✅ Характеристики:
-- Производитель: {brand}
-- Форм-фактор: {form_factor}
-- Цвет: {color}
-
-✅ Отличное состояние
-💰 Выгодная цена – {price} ₽
-🛡 Гарантия - 7 дней
-
-Отправка любым удобным способом:
-Авито Доставка - Почта России - Яндекс Доставка - СДЭК
-
-📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
-        "fields": [
-            {"key": "model", "question": "Введите МОДЕЛЬ корпуса"},
-            {"key": "brand", "question": "Введите ПРОИЗВОДИТЕЛЯ"},
-            {"key": "form_factor", "question": "Введите ФОРМ-ФАКТОР (ATX / mATX / Mini-ITX)"},
-            {"key": "color", "question": "Введите ЦВЕТ"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
-        ]
-    },
-    "hdd": {
-        "name": "💽 HDD",
-        "template": """HDD
-
-✅ Характеристики:
-- Объём: {capacity}
-- Форм-фактор: {form_factor}
-- Интерфейс: {interface}
-
-✅ Дефектов нет
-✅ Полностью исправен, всё работает
-💰 Выгодная цена - {price} ₽
-🛡 Гарантия - 7 дней
-
-Отправка любым удобным способом:
-Авито Доставка - Почта России - Яндекс Доставка - СДЭК
-
-📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
-        "fields": [
-            {"key": "capacity", "question": "Введите ОБЪЁМ (1 ТБ или 500 ГБ)"},
-            {"key": "form_factor", "question": "Введите ФОРМ-ФАКТОР (2.5 или 3.5 дюйма)"},
-            {"key": "interface", "question": "Введите ИНТЕРФЕЙС (SATA / SAS)"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
-        ]
-    },
-    "ssd": {
-        "name": "⚡ SSD",
-        "template": """SSD
-
-Характеристики:
-- Объём: {capacity}
-- Тип: {type}
-- Форм-фактор: {form_factor}
-
-✅ Дефектов нет
-✅ Полностью исправен, всё работает
-💰 Выгодная цена - {price} ₽
-🛡 Гарантия - 7 дней
-
-Отправка любым удобным способом:
-Авито Доставка • Почта России • Яндекс Доставка • СДЭК • 5Post
-
-📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
-        "fields": [
-            {"key": "capacity", "question": "Введите ОБЪЁМ (512 ГБ или 1 ТБ)"},
-            {"key": "type", "question": "Введите ТИП (SATA / NVMe)"},
-            {"key": "form_factor", "question": "Введите ФОРМ-ФАКТОР (M.2 / 2.5\")"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
-        ]
-    },
-    "ram": {
-        "name": "🧠 Оперативная память",
-        "template": """ОПЕРАТИВНАЯ ПАМЯТЬ
-
-Характеристики:
-- Объём: {capacity}
-- Тип: {type}
-- Частота: {frequency}
-- Количество планок: {sticks}
-
-✅ Полностью исправна, всё работает
-💰 Выгодная цена - {price} ₽
-🛡 Гарантия - 7 дней
-
-Отправка любым удобным способом:
-Авито Доставка • Почта России • Яндекс Доставка • СДЭК
-
-📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
-        "fields": [
-            {"key": "capacity", "question": "Введите ОБЪЁМ (16 ГБ)"},
-            {"key": "type", "question": "Введите ТИП (DDR4 / DDR5)"},
-            {"key": "frequency", "question": "Введите ЧАСТОТУ (3200 МГц)"},
-            {"key": "sticks", "question": "Введите КОЛИЧЕСТВО ПЛАНОК (число)"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
-        ]
-    },
-    "motherboard": {
-        "name": "🔌 Материнская плата",
-        "template": """МАТЕРИНСКАЯ ПЛАТА
-
-Характеристики:
-- Модель: {model}
-- Сокет: {socket}
-- Форм-фактор: {form_factor}
-
-✅ Полностью исправна, всё работает
-💰 Выгодная цена - {price} ₽
-🛡 Гарантия — 7 дней
-
-Отправка любым удобным способом:
-Авито Доставка • Почта России • Яндекс Доставка • СДЭК
-
-📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
-        "fields": [
-            {"key": "model", "question": "Введите МОДЕЛЬ материнской платы"},
-            {"key": "socket", "question": "Введите СОКЕТ"},
-            {"key": "form_factor", "question": "Введите ФОРМ-ФАКТОР (ATX / mATX / Mini-ITX)"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
-        ]
-    },
-    "psu": {
-        "name": "🔋 Блок питания",
-        "template": """БЛОК ПИТАНИЯ
-
-Характеристики:
-- Модель: {model}
-- Мощность: {power} Вт
-- Сертификат: {certificate}
-
-✅ Полностью исправен, всё работает
-💰 Выгодная цена - {price} ₽
-🛡 Гарантия - 7 дней
-
-Отправка любым удобным способом:
-Авито Доставка • Почта России • Яндекс Доставка • СДЭК
-
-📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
-        "fields": [
-            {"key": "model", "question": "Введите МОДЕЛЬ блока питания"},
-            {"key": "power", "question": "Введите МОЩНОСТЬ (например, 750)"},
-            {"key": "certificate", "question": "Введите СЕРТИФИКАТ (Bronze / Gold / Platinum)"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
-        ]
-    }
-}
-
-CATEGORY_LIST = list(CATEGORIES.keys())
+# ===== ЗАПУСК =====
+if __name__ == "__main__":
+    from aiogram import executor
+    print("🤖 БОТ ЗАПУЩЕН И ГОТОВ К РАБОТЕ!")
+    print(f"📌 Токен: {BOT_TOKEN[:10]}...")
+    executor.start_polling(dp, skip_updates=True)
