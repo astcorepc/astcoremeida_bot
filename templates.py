@@ -254,7 +254,7 @@ CATEGORIES = {
     },
     "news": {
         "name": "📢 Новости / Соцсети",
-        "tags": "#новости #анонс #наличие",
+        "tags": "",
         "template": """<b>НОВОСТИ | АНОНС</b>
 
 📢 На нашем YouTube/Instagram - уже вышел новый короткий ролик! Переходите, смотрите и не забудьте поддержать видео лайком.
@@ -263,12 +263,7 @@ CATEGORIES = {
 
 📸 <a href="{instagram_link}">INSTAGRAM</a>
 
-📱 <a href="{tiktok_link}">TIKTOK</a>
-
-📢 Следите за новостями, новыми поступлениями и выгодными предложениями в нашем Telegram-канале:
-<a href="https://t.me/astcoremedia">Telegram</a>
-
-{tags}""",
+🎵 <a href="{tiktok_link}">TIKTOK</a>""",
         "fields": [
             {"key": "youtube_link", "question": "📎 Вставьте ССЫЛКУ на YouTube видео:"},
             {"key": "instagram_link", "question": "📎 Вставьте ССЫЛКУ на Instagram пост:"},
