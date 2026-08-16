@@ -29,27 +29,56 @@ class Form(StatesGroup):
 user_data = {}
 
 
-# --- КОМАНДА /start С КНОПКОЙ ---
+# --- КНОПКА "ОТМЕНА" (общая для всех) ---
+cancel_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton("❌ ОТМЕНА")]
+    ],
+    resize_keyboard=True
+)
+
+# --- КНОПКА "ГЛАВНОЕ МЕНЮ" (после отмены) ---
+main_menu_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton("🚀 ЗАПУСТИТЬ БОТА")]
+    ],
+    resize_keyboard=True
+)
+
+
+# --- ФУНКЦИЯ ВОЗВРАТА В ГЛАВНОЕ МЕНЮ ---
+async def return_to_main_menu(message: types.Message, state: FSMContext):
+    """Возвращает пользователя в главное меню"""
+    await state.finish()
+    # Очищаем данные пользователя
+    if message.from_user.id in user_data:
+        user_data.pop(message.from_user.id)
+    
+    await message.answer(
+        "🏠 Возвращаемся в главное меню!\n\n"
+        "Нажми кнопку ниже, чтобы начать заново:",
+        reply_markup=main_menu_keyboard
+    )
+
+
+# --- КОМАНДА /start ---
 @dp.message_handler(commands=['start'])
 async def start_command(message: types.Message):
-    # СОЗДАЕМ КНОПКУ СТАРТ (физическая кнопка внизу)
-    start_keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton("🚀 ЗАПУСТИТЬ БОТА")]
-        ],
-        resize_keyboard=True
-    )
-    
     await message.answer(
         "👋 Привет! Я бот для создания объявлений в твой канал!\n\n"
         "📌 Нажми на кнопку ниже, чтобы выбрать категорию товара:",
-        reply_markup=start_keyboard
+        reply_markup=main_menu_keyboard
     )
 
 
 # --- ОБРАБОТЧИК КНОПКИ "ЗАПУСТИТЬ БОТА" ---
 @dp.message_handler(lambda message: message.text == "🚀 ЗАПУСТИТЬ БОТА")
-async def start_bot_button(message: types.Message):
+async def start_bot_button(message: types.Message, state: FSMContext):
+    # Очищаем предыдущее состояние
+    await state.finish()
+    if message.from_user.id in user_data:
+        user_data.pop(message.from_user.id)
+    
     # Создаем кнопки с категориями
     keyboard = InlineKeyboardMarkup(row_width=2)
     for key in CATEGORY_LIST:
@@ -61,6 +90,12 @@ async def start_bot_button(message: types.Message):
         reply_markup=keyboard
     )
     await Form.choosing_category.set()
+
+
+# --- ОБРАБОТЧИК КНОПКИ "ОТМЕНА" (ГЛОБАЛЬНЫЙ) ---
+@dp.message_handler(lambda message: message.text == "❌ ОТМЕНА", state='*')
+async def cancel_button_handler(message: types.Message, state: FSMContext):
+    await return_to_main_menu(message, state)
 
 
 # --- Обработка выбора категории ---
@@ -85,7 +120,8 @@ async def process_category(callback_query: types.CallbackQuery, state: FSMContex
         f"📝 Начинаем заполнение для категории *{category['name']}*\n\n"
         f"Вопрос 1 из {len(fields)}:\n{first_question}\n\n"
         f"✏️ Просто напиши ответ в чат:",
-        parse_mode="Markdown"
+        parse_mode="Markdown",
+        reply_markup=cancel_keyboard  # ← КНОПКА ОТМЕНЫ
     )
     await Form.filling_fields.set()
 
@@ -120,14 +156,16 @@ async def process_field_answer(message: types.Message, state: FSMContext):
             f"✅ Принято!\n\n"
             f"Вопрос {next_index + 1} из {len(fields)}:\n"
             f"{next_question}\n\n"
-            f"✏️ Напиши ответ:"
+            f"✏️ Напиши ответ:",
+            reply_markup=cancel_keyboard  # ← КНОПКА ОТМЕНЫ
         )
     else:
         # Все вопросы заданы
         await message.answer(
             "✅ Отлично! Все характеристики заполнены.\n\n"
             "📸 Теперь отправь ФОТО товара.\n"
-            "Просто нажми на скрепку 📎 и выбери фото:"
+            "Просто нажми на скрепку 📎 и выбери фото:",
+            reply_markup=cancel_keyboard  # ← КНОПКА ОТМЕНЫ
         )
         await Form.waiting_for_photo.set()
 
@@ -156,6 +194,10 @@ async def process_photo(message: types.Message, state: FSMContext):
     if "price" not in filled_fields or not filled_fields["price"]:
         filled_fields["price"] = "—"
 
+    # Если ссылка на Авито не указана
+    if "avito_link" not in filled_fields or not filled_fields["avito_link"]:
+        filled_fields["avito_link"] = "#"
+
     # Подставляем в шаблон
     try:
         final_text = category["template"].format(**filled_fields)
@@ -173,18 +215,10 @@ async def process_photo(message: types.Message, state: FSMContext):
             parse_mode="HTML"
         )
         
-        # Возвращаем кнопку "Запустить" после успешной публикации
-        start_keyboard = ReplyKeyboardMarkup(
-            keyboard=[
-                [KeyboardButton("🚀 ЗАПУСТИТЬ БОТА")]
-            ],
-            resize_keyboard=True
-        )
-        
         await message.answer(
             "✅ ГОТОВО! Объявление опубликовано в канале! 🎉\n\n"
             "Хочешь создать еще одно? Нажми кнопку ниже:",
-            reply_markup=start_keyboard
+            reply_markup=main_menu_keyboard  # ← ГЛАВНОЕ МЕНЮ
         )
         
     except Exception as e:
@@ -193,7 +227,8 @@ async def process_photo(message: types.Message, state: FSMContext):
             f"Проверь:\n"
             f"1. Бот добавлен в канал как администратор\n"
             f"2. CHANNEL_ID правильный (с минусом)\n"
-            f"3. У бота есть права на отправку сообщений"
+            f"3. У бота есть права на отправку сообщений",
+            reply_markup=main_menu_keyboard
         )
 
     # Очищаем данные
@@ -206,25 +241,15 @@ async def process_photo(message: types.Message, state: FSMContext):
 async def wrong_photo_input(message: types.Message):
     await message.answer(
         "⚠️ Пожалуйста, отправь именно ФОТО (картинку).\n\n"
-        "📸 Нажми на скрепку 📎 и выбери фото из галереи."
+        "📸 Нажми на скрепку 📎 и выбери фото из галереи.",
+        reply_markup=cancel_keyboard  # ← КНОПКА ОТМЕНЫ
     )
 
 
 # --- Команда /cancel ---
 @dp.message_handler(commands=['cancel'], state='*')
 async def cancel_command(message: types.Message, state: FSMContext):
-    await state.finish()
-    start_keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton("🚀 ЗАПУСТИТЬ БОТА")]
-        ],
-        resize_keyboard=True
-    )
-    await message.answer(
-        "❌ Действие отменено.\n\n"
-        "Нажми кнопку, чтобы начать заново:",
-        reply_markup=start_keyboard
-    )
+    await return_to_main_menu(message, state)
 
 
 # --- Команда /help ---
@@ -232,7 +257,7 @@ async def cancel_command(message: types.Message, state: FSMContext):
 async def help_command(message: types.Message):
     await message.answer(
         "🤖 Как пользоваться ботом:\n\n"
-        "1️⃣ Нажми 'ЗАПУСТИТЬ БОТА'\n"
+        "1️⃣ Нажми '🚀 ЗАПУСТИТЬ БОТА'\n"
         "2️⃣ Выбери категорию товара\n"
         "3️⃣ Отвечай на вопросы\n"
         "4️⃣ Отправь фото\n"
@@ -240,12 +265,13 @@ async def help_command(message: types.Message):
         "📌 Команды:\n"
         "/start - начать работу\n"
         "/cancel - отменить\n"
-        "/help - помощь"
+        "/help - помощь\n\n"
+        "❌ На любом этапе можно нажать кнопку 'ОТМЕНА'"
     )
 
 
 # --- Запуск бота ---
 if __name__ == "__main__":
     from aiogram import executor
-    print("🤖 БОТ ЗАПУЩЕН! Напиши ему /start в Telegram")
+    print("🤖 БОТ ЗАПУЩЕН И ГОТОВ К РАБОТЕ!")
     executor.start_polling(dp, skip_updates=True)
