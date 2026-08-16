@@ -1,5 +1,3 @@
-# templates.py
-
 CATEGORIES = {
     "cpu": {
         "name": "🖥 Процессор",
@@ -19,10 +17,10 @@ CATEGORIES = {
 
 📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
         "fields": [
-            {"key": "model", "question": "Введите МОДЕЛЬ процессора:"},
-            {"key": "socket", "question": "Введите СОКЕТ (например, LGA 1700):"},
-            {"key": "frequency", "question": "Введите ЧАСТОТУ (например, 3.6 ГГц):"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях (только число):"}
+            {"key": "model", "question": "Введите МОДЕЛЬ процессора"},
+            {"key": "socket", "question": "Введите СОКЕТ (например, LGA 1700)"},
+            {"key": "frequency", "question": "Введите ЧАСТОТУ (например, 3.6 ГГц)"},
+            {"key": "price", "question": "Введите ЦЕНУ в рублях (только число)"}
         ]
     },
     "gpu": {
@@ -43,10 +41,10 @@ CATEGORIES = {
 
 📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
         "fields": [
-            {"key": "model", "question": "Введите МОДЕЛЬ видеокарты:"},
-            {"key": "memory", "question": "Введите объём видеопамяти в ГБ (число):"},
-            {"key": "brand", "question": "Введите ПРОИЗВОДИТЕЛЯ (например, NVIDIA, AMD):"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях:"}
+            {"key": "model", "question": "Введите МОДЕЛЬ видеокарты"},
+            {"key": "memory", "question": "Введите объём видеопамяти в ГБ (число)"},
+            {"key": "brand", "question": "Введите ПРОИЗВОДИТЕЛЯ (NVIDIA, AMD)"},
+            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
         ]
     },
     "case": {
@@ -67,11 +65,11 @@ CATEGORIES = {
 
 📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
         "fields": [
-            {"key": "model", "question": "Введите МОДЕЛЬ корпуса:"},
-            {"key": "brand", "question": "Введите ПРОИЗВОДИТЕЛЯ:"},
-            {"key": "form_factor", "question": "Введите ФОРМ-ФАКТОР (ATX / mATX / Mini-ITX):"},
-            {"key": "color", "question": "Введите ЦВЕТ:"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях:"}
+            {"key": "model", "question": "Введите МОДЕЛЬ корпуса"},
+            {"key": "brand", "question": "Введите ПРОИЗВОДИТЕЛЯ"},
+            {"key": "form_factor", "question": "Введите ФОРМ-ФАКТОР (ATX / mATX / Mini-ITX)"},
+            {"key": "color", "question": "Введите ЦВЕТ"},
+            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
         ]
     },
     "hdd": {
@@ -93,10 +91,10 @@ CATEGORIES = {
 
 📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
         "fields": [
-            {"key": "capacity", "question": "Введите ОБЪЁМ (например, 1 ТБ или 500 ГБ):"},
-            {"key": "form_factor", "question": "Введите ФОРМ-ФАКТОР (2.5 или 3.5 дюйма):"},
-            {"key": "interface", "question": "Введите ИНТЕРФЕЙС (SATA / SAS):"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях:"}
+            {"key": "capacity", "question": "Введите ОБЪЁМ (1 ТБ или 500 ГБ)"},
+            {"key": "form_factor", "question": "Введите ФОРМ-ФАКТОР (2.5 или 3.5 дюйма)"},
+            {"key": "interface", "question": "Введите ИНТЕРФЕЙС (SATA / SAS)"},
+            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
         ]
     },
     "ssd": {
@@ -118,10 +116,10 @@ CATEGORIES = {
 
 📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
         "fields": [
-            {"key": "capacity", "question": "Введите ОБЪЁМ (например, 512 ГБ или 1 ТБ):"},
-            {"key": "type", "question": "Введите ТИП (SATA / NVMe):"},
-            {"key": "form_factor", "question": "Введите ФОРМ-ФАКТОР (M.2 / 2.5\"):"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях:"}
+            {"key": "capacity", "question": "Введите ОБЪЁМ (512 ГБ или 1 ТБ)"},
+            {"key": "type", "question": "Введите ТИП (SATA / NVMe)"},
+            {"key": "form_factor", "question": "Введите ФОРМ-ФАКТОР (M.2 / 2.5\")"},
+            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
         ]
     },
     "ram": {
@@ -143,11 +141,11 @@ CATEGORIES = {
 
 📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
         "fields": [
-            {"key": "capacity", "question": "Введите ОБЪЁМ (например, 16 ГБ):"},
-            {"key": "type", "question": "Введите ТИП (DDR4 / DDR5):"},
-            {"key": "frequency", "question": "Введите ЧАСТОТУ (например, 3200 МГц):"},
-            {"key": "sticks", "question": "Введите КОЛИЧЕСТВО ПЛАНОК (число):"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях:"}
+            {"key": "capacity", "question": "Введите ОБЪЁМ (16 ГБ)"},
+            {"key": "type", "question": "Введите ТИП (DDR4 / DDR5)"},
+            {"key": "frequency", "question": "Введите ЧАСТОТУ (3200 МГц)"},
+            {"key": "sticks", "question": "Введите КОЛИЧЕСТВО ПЛАНОК (число)"},
+            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
         ]
     },
     "motherboard": {
@@ -168,10 +166,10 @@ CATEGORIES = {
 
 📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
         "fields": [
-            {"key": "model", "question": "Введите МОДЕЛЬ материнской платы:"},
-            {"key": "socket", "question": "Введите СОКЕТ:"},
-            {"key": "form_factor", "question": "Введите ФОРМ-ФАКТОР (ATX / mATX / Mini-ITX):"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях:"}
+            {"key": "model", "question": "Введите МОДЕЛЬ материнской платы"},
+            {"key": "socket", "question": "Введите СОКЕТ"},
+            {"key": "form_factor", "question": "Введите ФОРМ-ФАКТОР (ATX / mATX / Mini-ITX)"},
+            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
         ]
     },
     "psu": {
@@ -192,10 +190,10 @@ CATEGORIES = {
 
 📩 По вопросам покупки, наличия и доставки - пишите менеджеру.""",
         "fields": [
-            {"key": "model", "question": "Введите МОДЕЛЬ блока питания:"},
-            {"key": "power", "question": "Введите МОЩНОСТЬ (например, 750):"},
-            {"key": "certificate", "question": "Введите СЕРТИФИКАТ (Bronze / Gold / Platinum):"},
-            {"key": "price", "question": "Введите ЦЕНУ в рублях:"}
+            {"key": "model", "question": "Введите МОДЕЛЬ блока питания"},
+            {"key": "power", "question": "Введите МОЩНОСТЬ (например, 750)"},
+            {"key": "certificate", "question": "Введите СЕРТИФИКАТ (Bronze / Gold / Platinum)"},
+            {"key": "price", "question": "Введите ЦЕНУ в рублях"}
         ]
     }
 }
