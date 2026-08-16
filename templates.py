@@ -266,14 +266,13 @@ CATEGORIES = {
 📱 <a href="{tiktok_link}">TIKTOK</a>
 
 📢 Следите за новостями, новыми поступлениями и выгодными предложениями в нашем Telegram-канале:
-<a href="{telegram_link}">Telegram</a>
+<a href="https://t.me/astcoremedia">Telegram</a>
 
 {tags}""",
         "fields": [
             {"key": "youtube_link", "question": "📎 Вставьте ССЫЛКУ на YouTube видео:"},
             {"key": "instagram_link", "question": "📎 Вставьте ССЫЛКУ на Instagram пост:"},
-            {"key": "tiktok_link", "question": "📎 Вставьте ССЫЛКУ на TikTok видео:"},
-            {"key": "telegram_link", "question": "📎 Вставьте ССЫЛКУ на Telegram канал:"}
+            {"key": "tiktok_link", "question": "📎 Вставьте ССЫЛКУ на TikTok видео:"}
         ]
     }
 }
