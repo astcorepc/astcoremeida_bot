@@ -18,7 +18,7 @@ CATEGORIES = {
 👨‍💻 По вопросам покупки, наличия и доставки - пишите менеджеру:
 <a href="https://t.me/astcorepc01">@astcorepc01</a>
 
-🔗 <b>Профиль Авито:</b> {avito_link}""",
+🔗 <a href="{avito_link}">ПРОФИЛЬ</a>""",
         "fields": [
             {"key": "model", "question": "Введите МОДЕЛЬ процессора:"},
             {"key": "socket", "question": "Введите СОКЕТ (например, LGA 1700):"},
@@ -46,7 +46,7 @@ CATEGORIES = {
 👨‍💻 По вопросам покупки, наличия и доставки - пишите менеджеру:
 <a href="https://t.me/astcorepc01">@astcorepc01</a>
 
-🔗 <b>Профиль Авито:</b> {avito_link}""",
+🔗 <a href="{avito_link}">ПРОФИЛЬ</a>""",
         "fields": [
             {"key": "model", "question": "Введите МОДЕЛЬ видеокарты:"},
             {"key": "memory", "question": "Введите объём видеопамяти в ГБ:"},
@@ -74,7 +74,7 @@ CATEGORIES = {
 👨‍💻 По вопросам покупки, наличия и доставки - пишите менеджеру:
 <a href="https://t.me/astcorepc01">@astcorepc01</a>
 
-🔗 <b>Профиль Авито:</b> {avito_link}""",
+🔗 <a href="{avito_link}">ПРОФИЛЬ</a>""",
         "fields": [
             {"key": "model", "question": "Введите МОДЕЛЬ корпуса:"},
             {"key": "brand", "question": "Введите ПРОИЗВОДИТЕЛЯ:"},
@@ -104,7 +104,7 @@ CATEGORIES = {
 👨‍💻 По вопросам покупки, наличия и доставки - пишите менеджеру:
 <a href="https://t.me/astcorepc01">@astcorepc01</a>
 
-🔗 <b>Профиль Авито:</b> {avito_link}""",
+🔗 <a href="{avito_link}">ПРОФИЛЬ</a>""",
         "fields": [
             {"key": "capacity", "question": "Введите ОБЪЁМ (например, 1 ТБ или 500 ГБ):"},
             {"key": "form_factor", "question": "Введите ФОРМ-ФАКТОР (2.5 или 3.5):"},
@@ -133,7 +133,7 @@ CATEGORIES = {
 👨‍💻 По вопросам покупки, наличия и доставки - пишите менеджеру:
 <a href="https://t.me/astcorepc01">@astcorepc01</a>
 
-🔗 <b>Профиль Авито:</b> {avito_link}""",
+🔗 <a href="{avito_link}">ПРОФИЛЬ</a>""",
         "fields": [
             {"key": "capacity", "question": "Введите ОБЪЁМ (например, 512 ГБ или 1 ТБ):"},
             {"key": "type", "question": "Введите ТИП (SATA / NVMe):"},
@@ -162,7 +162,7 @@ CATEGORIES = {
 👨‍💻 По вопросам покупки, наличия и доставки - пишите менеджеру:
 <a href="https://t.me/astcorepc01">@astcorepc01</a>
 
-🔗 <b>Профиль Авито:</b> {avito_link}""",
+🔗 <a href="{avito_link}">ПРОФИЛЬ</a>""",
         "fields": [
             {"key": "capacity", "question": "Введите ОБЪЁМ (например, 16 ГБ):"},
             {"key": "type", "question": "Введите ТИП (DDR4 / DDR5):"},
@@ -191,7 +191,7 @@ CATEGORIES = {
 👨‍💻 По вопросам покупки, наличия и доставки - пишите менеджеру:
 <a href="https://t.me/astcorepc01">@astcorepc01</a>
 
-🔗 <b>Профиль Авито:</b> {avito_link}""",
+🔗 <a href="{avito_link}">ПРОФИЛЬ</a>""",
         "fields": [
             {"key": "model", "question": "Введите МОДЕЛЬ материнской платы:"},
             {"key": "socket", "question": "Введите СОКЕТ:"},
@@ -219,7 +219,7 @@ CATEGORIES = {
 👨‍💻 По вопросам покупки, наличия и доставки - пишите менеджеру:
 <a href="https://t.me/astcorepc01">@astcorepc01</a>
 
-🔗 <b>Профиль Авито:</b> {avito_link}""",
+🔗 <a href="{avito_link}">ПРОФИЛЬ</a>""",
         "fields": [
             {"key": "model", "question": "Введите МОДЕЛЬ блока питания:"},
             {"key": "power", "question": "Введите МОЩНОСТЬ (например, 750):"},
