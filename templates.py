@@ -251,6 +251,30 @@ CATEGORIES = {
             {"key": "price", "question": "Введите ЦЕНУ в рублях:"},
             {"key": "avito_link", "question": "📎 Вставьте ССЫЛКУ на профиль Авито:"}
         ]
+    },
+    "news": {
+        "name": "📢 Новости / Соцсети",
+        "tags": "#новости #анонс #наличие",
+        "template": """<b>НОВОСТИ | АНОНС</b>
+
+📢 На нашем YouTube/Instagram - уже вышел новый короткий ролик! Переходите, смотрите и не забудьте поддержать видео лайком.
+
+▶️ <a href="{youtube_link}">YOUTUBE</a>
+
+📸 <a href="{instagram_link}">INSTAGRAM</a>
+
+📱 <a href="{tiktok_link}">TIKTOK</a>
+
+📢 Следите за новостями, новыми поступлениями и выгодными предложениями в нашем Telegram-канале:
+<a href="{telegram_link}">Telegram</a>
+
+{tags}""",
+        "fields": [
+            {"key": "youtube_link", "question": "📎 Вставьте ССЫЛКУ на YouTube видео:"},
+            {"key": "instagram_link", "question": "📎 Вставьте ССЫЛКУ на Instagram пост:"},
+            {"key": "tiktok_link", "question": "📎 Вставьте ССЫЛКУ на TikTok видео:"},
+            {"key": "telegram_link", "question": "📎 Вставьте ССЫЛКУ на Telegram канал:"}
+        ]
     }
 }
 
