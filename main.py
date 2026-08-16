@@ -22,14 +22,14 @@ dp.middleware.setup(LoggingMiddleware())
 class Form(StatesGroup):
     choosing_category = State()
     filling_fields = State()
-    waiting_for_photo = State()
+    waiting_for_photos = State()  # ← ИЗМЕНЕНО: ожидание фото
 
 
 # --- Хранилище временных данных ---
 user_data = {}
 
 
-# --- КНОПКА "ОТМЕНА" (общая для всех) ---
+# --- КНОПКА "ОТМЕНА" ---
 cancel_keyboard = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton("❌ ОТМЕНА")]
@@ -37,7 +37,16 @@ cancel_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-# --- КНОПКА "ГЛАВНОЕ МЕНЮ" (после отмены) ---
+# --- КНОПКА "ГОТОВО" (после загрузки фото) ---
+done_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton("✅ ГОТОВО (опубликовать)")],
+        [KeyboardButton("❌ ОТМЕНА")]
+    ],
+    resize_keyboard=True
+)
+
+# --- КНОПКА "ГЛАВНОЕ МЕНЮ" ---
 main_menu_keyboard = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton("🚀 ЗАПУСТИТЬ БОТА")]
@@ -48,9 +57,7 @@ main_menu_keyboard = ReplyKeyboardMarkup(
 
 # --- ФУНКЦИЯ ВОЗВРАТА В ГЛАВНОЕ МЕНЮ ---
 async def return_to_main_menu(message: types.Message, state: FSMContext):
-    """Возвращает пользователя в главное меню"""
     await state.finish()
-    # Очищаем данные пользователя
     if message.from_user.id in user_data:
         user_data.pop(message.from_user.id)
     
@@ -74,12 +81,10 @@ async def start_command(message: types.Message):
 # --- ОБРАБОТЧИК КНОПКИ "ЗАПУСТИТЬ БОТА" ---
 @dp.message_handler(lambda message: message.text == "🚀 ЗАПУСТИТЬ БОТА")
 async def start_bot_button(message: types.Message, state: FSMContext):
-    # Очищаем предыдущее состояние
     await state.finish()
     if message.from_user.id in user_data:
         user_data.pop(message.from_user.id)
     
-    # Создаем кнопки с категориями
     keyboard = InlineKeyboardMarkup(row_width=2)
     for key in CATEGORY_LIST:
         category = CATEGORIES[key]
@@ -92,10 +97,97 @@ async def start_bot_button(message: types.Message, state: FSMContext):
     await Form.choosing_category.set()
 
 
-# --- ОБРАБОТЧИК КНОПКИ "ОТМЕНА" (ГЛОБАЛЬНЫЙ) ---
+# --- ОБРАБОТЧИК КНОПКИ "ОТМЕНА" ---
 @dp.message_handler(lambda message: message.text == "❌ ОТМЕНА", state='*')
 async def cancel_button_handler(message: types.Message, state: FSMContext):
     await return_to_main_menu(message, state)
+
+
+# --- ОБРАБОТЧИК КНОПКИ "ГОТОВО" ---
+@dp.message_handler(lambda message: message.text == "✅ ГОТОВО (опубликовать)", state=Form.waiting_for_photos)
+async def done_photos_handler(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    data = user_data.get(user_id)
+    
+    if not data:
+        await message.answer("⚠️ Ошибка. Начни заново /start")
+        await state.finish()
+        return
+    
+    photos = data.get("photos", [])
+    
+    if not photos:
+        await message.answer(
+            "⚠️ Ты не загрузил ни одного фото!\n\n"
+            "📸 Отправь хотя бы одно фото.",
+            reply_markup=cancel_keyboard
+        )
+        return
+    
+    # Генерируем текст
+    category_key = data["category"]
+    category = CATEGORIES[category_key]
+    filled_fields = data["fields"]
+    
+    if "price" not in filled_fields or not filled_fields["price"]:
+        filled_fields["price"] = "—"
+    
+    if "avito_link" not in filled_fields or not filled_fields["avito_link"]:
+        filled_fields["avito_link"] = "#"
+    
+    try:
+        final_text = category["template"].format(**filled_fields)
+    except KeyError as e:
+        await message.answer(f"⚠️ Ошибка в шаблоне: не хватает поля {e}")
+        await state.finish()
+        return
+    
+    # Отправляем в канал (медиа-группа до 10 фото)
+    try:
+        if len(photos) == 1:
+            # Если одно фото — отправляем как обычное
+            await bot.send_photo(
+                chat_id=config.CHANNEL_ID,
+                photo=photos[0],
+                caption=final_text,
+                parse_mode="HTML"
+            )
+        else:
+            # Если несколько фото — отправляем как альбом (медиа-группа)
+            from aiogram.types import InputMediaPhoto
+            media_group = []
+            for i, photo_id in enumerate(photos):
+                if i == 0:
+                    # Первое фото с подписью
+                    media_group.append(InputMediaPhoto(media=photo_id, caption=final_text, parse_mode="HTML"))
+                else:
+                    # Остальные фото без подписи
+                    media_group.append(InputMediaPhoto(media=photo_id))
+            
+            await bot.send_media_group(
+                chat_id=config.CHANNEL_ID,
+                media=media_group
+            )
+        
+        await message.answer(
+            f"✅ ГОТОВО! Объявление опубликовано в канале! 🎉\n\n"
+            f"📸 Загружено фото: {len(photos)} шт.\n\n"
+            f"Хочешь создать еще одно? Нажми кнопку ниже:",
+            reply_markup=main_menu_keyboard
+        )
+        
+    except Exception as e:
+        await message.answer(
+            f"❌ Ошибка при отправке в канал: {e}\n\n"
+            f"Проверь:\n"
+            f"1. Бот добавлен в канал как администратор\n"
+            f"2. CHANNEL_ID правильный (с минусом)\n"
+            f"3. У бота есть права на отправку сообщений",
+            reply_markup=main_menu_keyboard
+        )
+    
+    user_data.pop(user_id, None)
+    await state.finish()
 
 
 # --- Обработка выбора категории ---
@@ -104,11 +196,11 @@ async def process_category(callback_query: types.CallbackQuery, state: FSMContex
     category_key = callback_query.data.split('_')[1]
     category = CATEGORIES[category_key]
 
-    # Сохраняем данные
     user_data[callback_query.from_user.id] = {
         "category": category_key,
         "fields": {},
-        "field_index": 0
+        "field_index": 0,
+        "photos": []  # ← Хранилище для фото
     }
 
     fields = category["fields"]
@@ -121,7 +213,7 @@ async def process_category(callback_query: types.CallbackQuery, state: FSMContex
         f"Вопрос 1 из {len(fields)}:\n{first_question}\n\n"
         f"✏️ Просто напиши ответ в чат:",
         parse_mode="Markdown",
-        reply_markup=cancel_keyboard  # ← КНОПКА ОТМЕНЫ
+        reply_markup=cancel_keyboard
     )
     await Form.filling_fields.set()
 
@@ -142,14 +234,12 @@ async def process_field_answer(message: types.Message, state: FSMContext):
     fields = category["fields"]
     current_index = data["field_index"]
 
-    # Сохраняем ответ
     current_field_key = fields[current_index]["key"]
     data["fields"][current_field_key] = message.text.strip()
 
     next_index = current_index + 1
 
     if next_index < len(fields):
-        # Есть еще вопросы
         data["field_index"] = next_index
         next_question = fields[next_index]["question"]
         await message.answer(
@@ -157,21 +247,24 @@ async def process_field_answer(message: types.Message, state: FSMContext):
             f"Вопрос {next_index + 1} из {len(fields)}:\n"
             f"{next_question}\n\n"
             f"✏️ Напиши ответ:",
-            reply_markup=cancel_keyboard  # ← КНОПКА ОТМЕНЫ
+            reply_markup=cancel_keyboard
         )
     else:
-        # Все вопросы заданы
+        # Все вопросы заданы → переходим к загрузке фото
         await message.answer(
             "✅ Отлично! Все характеристики заполнены.\n\n"
             "📸 Теперь отправь ФОТО товара.\n"
-            "Просто нажми на скрепку 📎 и выбери фото:",
-            reply_markup=cancel_keyboard  # ← КНОПКА ОТМЕНЫ
+            "• Можно отправить до 4 фото\n"
+            "• Отправляй по одному фото\n"
+            "• Когда загрузишь все фото — нажми 'ГОТОВО'\n\n"
+            "📎 Нажми на скрепку и выбери фото:",
+            reply_markup=done_keyboard  # ← КНОПКИ "ГОТОВО" и "ОТМЕНА"
         )
-        await Form.waiting_for_photo.set()
+        await Form.waiting_for_photos.set()
 
 
-# --- Обработка фото ---
-@dp.message_handler(content_types=['photo'], state=Form.waiting_for_photo)
+# --- Обработка фото (сбор до 4 штук) ---
+@dp.message_handler(content_types=['photo'], state=Form.waiting_for_photos)
 async def process_photo(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     data = user_data.get(user_id)
@@ -180,69 +273,49 @@ async def process_photo(message: types.Message, state: FSMContext):
         await message.answer("⚠️ Ошибка. Начни заново /start")
         await state.finish()
         return
-
+    
     # Получаем фото
     photo = message.photo[-1]
     file_id = photo.file_id
-
-    # Генерируем текст
-    category_key = data["category"]
-    category = CATEGORIES[category_key]
-    filled_fields = data["fields"]
-
-    # Если цена не указана
-    if "price" not in filled_fields or not filled_fields["price"]:
-        filled_fields["price"] = "—"
-
-    # Если ссылка на Авито не указана
-    if "avito_link" not in filled_fields or not filled_fields["avito_link"]:
-        filled_fields["avito_link"] = "#"
-
-    # Подставляем в шаблон
-    try:
-        final_text = category["template"].format(**filled_fields)
-    except KeyError as e:
-        await message.answer(f"⚠️ Ошибка в шаблоне: не хватает поля {e}")
-        await state.finish()
+    
+    # Добавляем в список
+    if "photos" not in data:
+        data["photos"] = []
+    
+    if len(data["photos"]) >= 4:
+        await message.answer(
+            "⚠️ Ты уже загрузил 4 фото! Максимум 4.\n\n"
+            "Если хочешь опубликовать — нажми '✅ ГОТОВО (опубликовать)'",
+            reply_markup=done_keyboard
+        )
         return
-
-    # Отправляем в канал
-    try:
-        await bot.send_photo(
-            chat_id=config.CHANNEL_ID,
-            photo=file_id,
-            caption=final_text,
-            parse_mode="HTML"
-        )
-        
-        await message.answer(
-            "✅ ГОТОВО! Объявление опубликовано в канале! 🎉\n\n"
-            "Хочешь создать еще одно? Нажми кнопку ниже:",
-            reply_markup=main_menu_keyboard  # ← ГЛАВНОЕ МЕНЮ
-        )
-        
-    except Exception as e:
-        await message.answer(
-            f"❌ Ошибка при отправке в канал: {e}\n\n"
-            f"Проверь:\n"
-            f"1. Бот добавлен в канал как администратор\n"
-            f"2. CHANNEL_ID правильный (с минусом)\n"
-            f"3. У бота есть права на отправку сообщений",
-            reply_markup=main_menu_keyboard
-        )
-
-    # Очищаем данные
-    user_data.pop(user_id, None)
-    await state.finish()
+    
+    data["photos"].append(file_id)
+    remaining = 4 - len(data["photos"])
+    
+    await message.answer(
+        f"✅ Фото {len(data['photos'])} загружено!\n\n"
+        f"📸 Осталось места: {remaining} фото\n"
+        f"• Отправь еще фото\n"
+        f"• Или нажми 'ГОТОВО' для публикации",
+        reply_markup=done_keyboard
+    )
 
 
 # --- Обработчик, если отправили не фото ---
-@dp.message_handler(state=Form.waiting_for_photo, content_types=['text', 'document', 'video', 'audio', 'sticker'])
+@dp.message_handler(state=Form.waiting_for_photos, content_types=['text', 'document', 'video', 'audio', 'sticker', 'animation'])
 async def wrong_photo_input(message: types.Message):
+    # Проверяем, не нажата ли кнопка "ГОТОВО" или "ОТМЕНА"
+    if message.text == "✅ ГОТОВО (опубликовать)":
+        return  # Это обрабатывается отдельным хендлером
+    if message.text == "❌ ОТМЕНА":
+        return  # Это обрабатывается отдельным хендлером
+    
     await message.answer(
         "⚠️ Пожалуйста, отправь именно ФОТО (картинку).\n\n"
-        "📸 Нажми на скрепку 📎 и выбери фото из галереи.",
-        reply_markup=cancel_keyboard  # ← КНОПКА ОТМЕНЫ
+        "📸 Нажми на скрепку 📎 и выбери фото из галереи.\n\n"
+        "Или нажми 'ГОТОВО', если загрузил все фото.",
+        reply_markup=done_keyboard
     )
 
 
@@ -260,8 +333,9 @@ async def help_command(message: types.Message):
         "1️⃣ Нажми '🚀 ЗАПУСТИТЬ БОТА'\n"
         "2️⃣ Выбери категорию товара\n"
         "3️⃣ Отвечай на вопросы\n"
-        "4️⃣ Отправь фото\n"
-        "5️⃣ Готово! Объявление в канале! 🎉\n\n"
+        "4️⃣ Отправь до 4 фото (по одному)\n"
+        "5️⃣ Нажми 'ГОТОВО' для публикации\n"
+        "6️⃣ Готово! Объявление в канале! 🎉\n\n"
         "📌 Команды:\n"
         "/start - начать работу\n"
         "/cancel - отменить\n"
